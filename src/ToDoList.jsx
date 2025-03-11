@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./ToDoList.css";
 
 const ToDoList = () => {
   const [tasks, setTasks] = useState([]);
@@ -8,60 +9,113 @@ const ToDoList = () => {
   const handleInputChange = (e) => {
     setNewTask(e.target.value);
   };
-// Add a new task to the list
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      editingIndex !== null ? updateTask() : addTask();
+    }
+  };
+
   const addTask = () => {
     if (newTask.trim() !== "") {
-      setTasks([...tasks, newTask]);
+      setTasks([...tasks, { text: newTask.trim(), completed: false }]);
       setNewTask("");
     }
   };
-// Edit a task in the list
+
   const editTask = (index) => {
-    setNewTask(tasks[index]); // Set the input field with the current task
-    setEditingIndex(index); // Track which task is being edited
+    setNewTask(tasks[index].text);
+    setEditingIndex(index);
   };
-// Update the task in the list
+
   const updateTask = () => {
     if (newTask.trim() !== "" && editingIndex !== null) {
       const updatedTasks = [...tasks];
-      updatedTasks[editingIndex] = newTask;
+      updatedTasks[editingIndex] = { 
+        ...updatedTasks[editingIndex], 
+        text: newTask.trim() 
+      };
       setTasks(updatedTasks);
       setNewTask("");
       setEditingIndex(null);
     }
   };
-// Delete a task from the list
+
   const deleteTask = (index) => {
     const updatedTasks = tasks.filter((_, i) => i !== index);
     setTasks(updatedTasks);
   };
 
+  const toggleComplete = (index) => {
+    const updatedTasks = [...tasks];
+    updatedTasks[index] = { 
+      ...updatedTasks[index], 
+      completed: !updatedTasks[index].completed 
+    };
+    setTasks(updatedTasks);
+  };
+
   return (
-    <div className="to-do-list">
-      <h1>To-Do List</h1>
-      <div className="add-btn">
+    <div className="todo-container">
+      <div className="todo-header">
+        <h1>To-Do List</h1>
+        <p>{tasks.length} tasks, {tasks.filter(task => task.completed).length} completed</p>
+      </div>
+
+      <div className="input-section">
         <input
           type="text"
           placeholder="Enter a task..."
           value={newTask}
           onChange={handleInputChange}
+          onKeyPress={handleKeyPress}
         />
         {editingIndex !== null ? (
-          <button className="update-button" onClick={updateTask}>Update</button>
+          <button className="update-button" onClick={updateTask}>
+            Update
+          </button>
         ) : (
-          <button className="add-button" onClick={addTask}>Add</button>
+          <button className="add-button" onClick={addTask}>
+            Add
+          </button>
         )}
       </div>
 
-      <ul>
-        {tasks.map((task, index) => (
-          <li key={index}>
-            <span className="text">{task}</span>
-            <button className="edit-btn" onClick={() => editTask(index)}>Edit</button>
-            <button className="delete-btn" onClick={() => deleteTask(index)}>Delete</button>
-          </li>
-        ))}
-      </ul>
+      {tasks.length === 0 ? (
+        <div className="empty-state">
+          <p>No tasks yet. Add a task to get started!</p>
+        </div>
+      ) : (
+        <ul className="task-list">
+          {tasks.map((task, index) => (
+            <li key={index} className={`task-item ${task.completed ? 'completed' : ''}`}>
+              <div className="task-content">
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={() => toggleComplete(index)}
+                />
+                <span className="task-text">{task.text}</span>
+              </div>
+              <div className="task-actions">
+                <button 
+                  className="edit-button"
+                  onClick={() => editTask(index)}
+                  disabled={task.completed}
+                >
+                  Edit
+                </button>
+                <button 
+                  className="delete-button"
+                  onClick={() => deleteTask(index)}
+                >
+                  Delete
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
